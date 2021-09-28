@@ -29,7 +29,7 @@ public class StreamAggregateTopology {
         try {
             final StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
 
-            environment.enableCheckpointing(5000);
+//            environment.enableCheckpointing(5000);
 
             DataStream<String> streamSource = environment.addSource(Consumer.getKafkaConsumer())
                     .setParallelism(StreamAggregateConfig.CONSUMER_PARALLELISM);
