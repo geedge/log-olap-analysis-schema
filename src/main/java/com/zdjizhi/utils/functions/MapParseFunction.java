@@ -139,8 +139,10 @@ public class MapParseFunction implements MapFunction<String, Tuple3<String, Stri
             if (StringUtil.isNotBlank(expr)) {
                 String operateValue = JsonParseUtil.getString(message, fieldName);
                 ArrayList<String> read = JsonPath.parse(operateValue).read(expr);
-                String flattenResult = read.get(0);
-                dimensions.put(resultKeyName, flattenResult);
+                if (read.size() >= 1) {
+                    String flattenResult = read.get(0);
+                    dimensions.put(resultKeyName, flattenResult);
+                }
             }
         } catch (ClassCastException | InvalidPathException e) {
             logger.error("设备标签解析异常，[ " + expr + " ]解析表达式错误" + e);
