@@ -19,7 +19,7 @@ public class Producer {
 
     private static Properties createProducerConfig() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", StreamAggregateConfig.OUTPUT_KAFKA_SERVERS);
+        properties.put("bootstrap.servers", StreamAggregateConfig.SINK_KAFKA_SERVERS);
         properties.put("acks", StreamAggregateConfig.PRODUCER_ACK);
         properties.put("retries", StreamAggregateConfig.RETRIES);
         properties.put("linger.ms", StreamAggregateConfig.LINGER_MS);
@@ -37,7 +37,7 @@ public class Producer {
 
     public static FlinkKafkaProducer<String> getKafkaProducer() {
         FlinkKafkaProducer<String> kafkaProducer = new FlinkKafkaProducer<String>(
-                StreamAggregateConfig.OUTPUT_KAFKA_TOPIC,
+                StreamAggregateConfig.SINK_KAFKA_TOPIC,
                 new SimpleStringSchema(),
                 createProducerConfig(), Optional.empty());
 

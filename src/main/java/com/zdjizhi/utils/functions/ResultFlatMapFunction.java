@@ -38,6 +38,7 @@ public class ResultFlatMapFunction implements FlatMapFunction<String, String> {
                     out.collect(JsonMapper.toJsonString(jsonObject));
                 }
             }
+//            out.collect(value);
         }
     }
 }

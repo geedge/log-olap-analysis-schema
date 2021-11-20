@@ -17,11 +17,11 @@ import java.util.Properties;
 public class Consumer {
     private static Properties createConsumerConfig() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", StreamAggregateConfig.INPUT_KAFKA_SERVERS);
+        properties.put("bootstrap.servers", StreamAggregateConfig.SOURCE_KAFKA_SERVERS);
         properties.put("group.id", StreamAggregateConfig.GROUP_ID);
-        properties.put("session.timeout.ms", "60000");
-        properties.put("max.poll.records", 3000);
-        properties.put("max.partition.fetch.bytes", 31457280);
+        properties.put("session.timeout.ms", StreamAggregateConfig.SESSION_TIMEOUT_MS);
+        properties.put("max.poll.records", StreamAggregateConfig.MAX_POLL_RECORDS);
+        properties.put("max.partition.fetch.bytes", StreamAggregateConfig.MAX_PARTITION_FETCH_BYTES);
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
@@ -31,7 +31,7 @@ public class Consumer {
     }
 
     public static FlinkKafkaConsumer<String> getKafkaConsumer() {
-        FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(StreamAggregateConfig.INPUT_KAFKA_TOPIC,
+        FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(StreamAggregateConfig.SOURCE_KAFKA_TOPIC,
                 new SimpleStringSchema(), createConsumerConfig());
 
         kafkaConsumer.setCommitOffsetsOnCheckpoints(true);

@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-olap-analysis-schema</artifactId>
-    <version>211105-flattenSpec</version>
+    <version>211120-hash</version>
 
     <name>log-olap-analysis-schema</name>
     <url>http://www.example.com</url>
@@ -116,7 +116,7 @@
         <dependency>
             <groupId>com.zdjizhi</groupId>
             <artifactId>galaxy</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.7</version>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-log4j12</artifactId>
@@ -128,15 +128,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table -->
-        <!--<dependency>-->
-            <!--<groupId>org.apache.flink</groupId>-->
-            <!--<artifactId>flink-table</artifactId>-->
-            <!--<version>${flink.version}</version>-->
-            <!--<type>pom</type>-->
-            <!--<scope>${scope.type}</scope>-->
-        <!--</dependency>-->
 
         <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
         <dependency>

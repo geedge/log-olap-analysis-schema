@@ -1,5 +1,6 @@
 package com.zdjizhi.utils.functions;
 
+import cn.hutool.core.util.RandomUtil;
 import com.jayway.jsonpath.InvalidPathException;
 import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.StreamAggregateConfig;
@@ -8,8 +9,8 @@ import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.utils.general.ParseFunctions;
 import com.zdjizhi.utils.json.JsonParseUtil;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.tuple.Tuple4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +25,8 @@ import java.util.Map;
  * @Description:
  * @date 2021/5/2715:01
  */
-public class MapParseFunction implements MapFunction<String, Tuple3<String, String, String>> {
-    private static final Logger logger = LoggerFactory.getLogger(CountWindowFunction.class);
+public class MapParseFunction implements MapFunction<String,Tuple4<String,String, String, String>> {
+    private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
 
     private static ArrayList<String[]> jobList = JsonParseUtil.getTransformsList();
 
@@ -33,10 +34,11 @@ public class MapParseFunction implements MapFunction<String, Tuple3<String, Stri
 
     @Override
     @SuppressWarnings("unchecked")
-    public Tuple3<String, String, String> map(String message) {
+    public Tuple4<String,String, String, String> map(String message) {
         try {
             if (StringUtil.isNotBlank(message)) {
                 Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
+//                String streamTraceId = JsonParseUtil.getString(object, "common_stream_trace_id");
                 Map<String, Object> dimensionsObj = ParseFunctions.transDimensions(dimensionsMap, object);
                 if (ParseFunctions.filterLogs(object)) {
                     for (String[] strings : jobList) {
@@ -74,7 +76,9 @@ public class MapParseFunction implements MapFunction<String, Tuple3<String, Stri
                                 }
                                 break;
                             case "hierarchy":
-                                return new Tuple3<>(JsonParseUtil.getString(object, logsKeyName), JsonMapper.toJsonString(dimensionsObj), JsonMapper.toJsonString(object));
+                                String streamTraceId = JsonParseUtil.getString(object, "common_stream_trace_id");
+//                                RandomUtil.randomInt(0, StreamAggregateConfig.COUNT_PARALLELISM)
+                                return new Tuple4<>(streamTraceId,JsonParseUtil.getString(object, logsKeyName), JsonMapper.toJsonString(dimensionsObj), JsonMapper.toJsonString(object));
                             default:
                                 break;
                         }
@@ -83,9 +87,9 @@ public class MapParseFunction implements MapFunction<String, Tuple3<String, Stri
             }
         } catch (RuntimeException e) {
             logger.error("Map Parse error,message:" + e);
-            return new Tuple3<>("", "", "");
+            return new Tuple4<>("","", "", "");
         }
-        return new Tuple3<>("", "", "");
+        return new Tuple4<>("","", "", "");
     }
 
     /**
