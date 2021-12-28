@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author qidaijie
@@ -28,7 +29,6 @@ public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple4<Strin
     private static HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricsMap();
     private static HashMap<String, String[]> actionMap = JsonParseUtil.getActionMap();
     private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(320);
-    private static String resultTimeKey = JsonParseUtil.getTimeKey();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -61,7 +61,6 @@ public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple4<Strin
 
                 for (String countKey : cacheMap.keySet()) {
                     Map<String, Object> resultMap = cacheMap.get(countKey);
-                    JsonParseUtil.setValue(resultMap, resultTimeKey, endTime);
                     output.collect(new Tuple2<>(countKey, JsonMapper.toJsonString(resultMap)));
                 }
             }

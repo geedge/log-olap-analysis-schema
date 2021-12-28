@@ -7,7 +7,6 @@ import com.zdjizhi.utils.functions.*;
 import com.zdjizhi.utils.kafka.Consumer;
 import com.zdjizhi.utils.kafka.Producer;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -39,7 +38,7 @@ public class StreamAggregateTopology {
             DataStream<String> streamSource = environment.addSource(Consumer.getKafkaConsumer())
                     .setParallelism(StreamAggregateConfig.SOURCE_PARALLELISM);
 
-            SingleOutputStreamOperator<Tuple4<String, String, String, String>> parseDataMap = streamSource.map(new MapParseFunction())
+            SingleOutputStreamOperator<Tuple4<String, String, String, String>> parseDataMap = streamSource.map(new ParseMapFunction())
                     .name("ParseDataMap")
                     .setParallelism(StreamAggregateConfig.PARSE_PARALLELISM);
 

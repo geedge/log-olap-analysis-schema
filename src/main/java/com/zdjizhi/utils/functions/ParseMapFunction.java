@@ -25,7 +25,7 @@ import java.util.Map;
  * @Description:
  * @date 2021/5/2715:01
  */
-public class MapParseFunction implements MapFunction<String,Tuple4<String,String, String, String>> {
+public class ParseMapFunction implements MapFunction<String,Tuple4<String,String, String, String>> {
     private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
 
     private static ArrayList<String[]> jobList = JsonParseUtil.getTransformsList();
@@ -38,7 +38,7 @@ public class MapParseFunction implements MapFunction<String,Tuple4<String,String
         try {
             if (StringUtil.isNotBlank(message)) {
                 Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
-//                String streamTraceId = JsonParseUtil.getString(object, "common_stream_trace_id");
+                String streamTraceId = JsonParseUtil.getString(object, "common_stream_trace_id");
                 Map<String, Object> dimensionsObj = ParseFunctions.transDimensions(dimensionsMap, object);
                 if (ParseFunctions.filterLogs(object)) {
                     for (String[] strings : jobList) {
@@ -76,8 +76,6 @@ public class MapParseFunction implements MapFunction<String,Tuple4<String,String
                                 }
                                 break;
                             case "hierarchy":
-                                String streamTraceId = JsonParseUtil.getString(object, "common_stream_trace_id");
-//                                RandomUtil.randomInt(0, StreamAggregateConfig.COUNT_PARALLELISM)
                                 return new Tuple4<>(streamTraceId,JsonParseUtil.getString(object, logsKeyName), JsonMapper.toJsonString(dimensionsObj), JsonMapper.toJsonString(object));
                             default:
                                 break;

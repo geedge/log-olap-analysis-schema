@@ -51,8 +51,8 @@ public class ParseFunctions {
         for (String key : filtersMap.keySet()) {
             switch (key) {
                 case "notempty":
-                    Object value = JsonParseUtil.getValue(object, filtersMap.get(key));
-                    if (value != null && StringUtil.isNotBlank(value.toString())) {
+                    String value = JsonParseUtil.getString(object, filtersMap.get(key));
+                    if (StringUtil.isNotBlank(value)) {
                         available = true;
                     }
                     break;
