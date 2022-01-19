@@ -6,7 +6,6 @@ import com.zdjizhi.utils.general.MetricFunctions;
 import com.zdjizhi.utils.json.JsonParseUtil;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
@@ -15,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author qidaijie
@@ -23,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Description:
  * @date 2021/7/2113:55
  */
-public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple4<String, String, String, String>, Tuple2<String, String>, String, TimeWindow> {
+public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple3<String, String, String>, Tuple2<String, String>, String, TimeWindow> {
     private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
 
     private static HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricsMap();
@@ -32,14 +30,15 @@ public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple4<Strin
 
     @Override
     @SuppressWarnings("unchecked")
-    public void process(String key, Context context, Iterable<Tuple4<String, String, String, String>> input, Collector<Tuple2<String, String>> output) {
+    public void process(String key, Context context, Iterable<Tuple3<String, String, String>> input, Collector<Tuple2<String, String>> output) {
         try {
-            for (Tuple4<String, String, String, String> tuple : input) {
-                String label = tuple.f1;
+            for (Tuple3<String, String, String> tuple : input) {
+                String label = tuple.f0;
+                String dimensions = tuple.f1;
+                String message = tuple.f2;
+                String l7_Protocol = label.substring(0, label.indexOf("@"));
                 //action中某个协议的所有function,如果没有就默认
-                String[] metricNames = actionMap.getOrDefault(label, actionMap.get("Default"));
-                String dimensions = tuple.f2;
-                String message = tuple.f3;
+                String[] metricNames = actionMap.getOrDefault(l7_Protocol, actionMap.get("Default"));
                 if (StringUtil.isNotBlank(message)) {
                     Map<String, Object> dimensionsObj = (Map<String, Object>) JsonMapper.fromJsonString(dimensions, Map.class);
                     Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
@@ -57,11 +56,9 @@ public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple4<Strin
             }
 
             if (!cacheMap.isEmpty()) {
-                Long endTime = context.window().getEnd() / 1000;
-
-                for (String countKey : cacheMap.keySet()) {
-                    Map<String, Object> resultMap = cacheMap.get(countKey);
-                    output.collect(new Tuple2<>(countKey, JsonMapper.toJsonString(resultMap)));
+                for (String dimensions : cacheMap.keySet()) {
+                    Map<String, Object> resultMap = cacheMap.get(dimensions);
+                    output.collect(new Tuple2<>(dimensions, JsonMapper.toJsonString(resultMap)));
                 }
             }
 

@@ -10,7 +10,7 @@ import com.zdjizhi.utils.general.ParseFunctions;
 import com.zdjizhi.utils.json.JsonParseUtil;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author qidaijie
@@ -25,7 +26,7 @@ import java.util.Map;
  * @Description:
  * @date 2021/5/2715:01
  */
-public class ParseMapFunction implements MapFunction<String,Tuple4<String,String, String, String>> {
+public class ParseMapFunction implements MapFunction<String, Tuple3<String, String, String>> {
     private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
 
     private static ArrayList<String[]> jobList = JsonParseUtil.getTransformsList();
@@ -34,11 +35,11 @@ public class ParseMapFunction implements MapFunction<String,Tuple4<String,String
 
     @Override
     @SuppressWarnings("unchecked")
-    public Tuple4<String,String, String, String> map(String message) {
+    public Tuple3<String, String, String> map(String message) {
         try {
             if (StringUtil.isNotBlank(message)) {
                 Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
-                String streamTraceId = JsonParseUtil.getString(object, "common_stream_trace_id");
+//                String streamTraceId = JsonMapperParseUtil.getString(object, "common_stream_trace_id");
                 Map<String, Object> dimensionsObj = ParseFunctions.transDimensions(dimensionsMap, object);
                 if (ParseFunctions.filterLogs(object)) {
                     for (String[] strings : jobList) {
@@ -76,7 +77,8 @@ public class ParseMapFunction implements MapFunction<String,Tuple4<String,String
                                 }
                                 break;
                             case "hierarchy":
-                                return new Tuple4<>(streamTraceId,JsonParseUtil.getString(object, logsKeyName), JsonMapper.toJsonString(dimensionsObj), JsonMapper.toJsonString(object));
+                                String key = JsonParseUtil.getString(object, logsKeyName) + "@" + ThreadLocalRandom.current().nextInt(StreamAggregateConfig.RANDOM_RANGE_NUM);
+                                return new Tuple3<>(key, JsonMapper.toJsonString(dimensionsObj), ParseFunctions.getMetricsLog(object));
                             default:
                                 break;
                         }
@@ -84,10 +86,10 @@ public class ParseMapFunction implements MapFunction<String,Tuple4<String,String
                 }
             }
         } catch (RuntimeException e) {
-            logger.error("Map Parse error,message:" + e);
-            return new Tuple4<>("","", "", "");
+            logger.error("An error occurred in the original log parsing reorganization,error message is:" + e);
+            return new Tuple3<>("", "", "");
         }
-        return new Tuple4<>("","", "", "");
+        return new Tuple3<>("", "", "");
     }
 
     /**

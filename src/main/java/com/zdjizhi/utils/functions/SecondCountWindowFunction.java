@@ -26,7 +26,6 @@ public class SecondCountWindowFunction extends ProcessWindowFunction<Tuple2<Stri
     private static final Logger logger = LoggerFactory.getLogger(SecondCountWindowFunction.class);
 
     private static HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricsMap();
-    private static HashMap<String, String[]> actionMap = JsonParseUtil.getActionMap();
     private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(320);
     private static String resultTimeKey = JsonParseUtil.getTimeKey();
 
@@ -40,17 +39,15 @@ public class SecondCountWindowFunction extends ProcessWindowFunction<Tuple2<Stri
                 if (StringUtil.isNotBlank(message)) {
                     Map<String, Object> dimensionsObj = (Map<String, Object>) JsonMapper.fromJsonString(dimensions, Map.class);
                     Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
-                    String label = JsonParseUtil.getString(object, "protocol_id");
-                    //action中某个协议的所有function,如果没有就默认
-                    String[] metricNames = actionMap.getOrDefault(label, actionMap.get("Default"));
 
                     Map<String, Object> cacheMessage = cacheMap.getOrDefault(dimensions, dimensionsObj);
-                    for (String name : metricNames) {
+                    for (String name : metricsMap.keySet()) {
                         String[] metrics = metricsMap.get(name);
                         String function = metrics[0];
                         functionSet(function, cacheMessage, name, cacheMessage.get(name), JsonParseUtil.getValue(object, name));
 
                     }
+
                     cacheMap.put(dimensions, cacheMessage);
                 }
             }

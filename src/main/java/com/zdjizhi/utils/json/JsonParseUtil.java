@@ -232,6 +232,24 @@ public class JsonParseUtil {
     }
 
     /**
+     * 获取Metrics内指标，用于过滤原始日志
+     *
+     * @return 指标列原始名称
+     */
+    public static ArrayList<String> getLogMetrics() {
+        ArrayList<String> list = new ArrayList<>();
+        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
+        DocumentContext parse = JsonPath.parse(schema);
+
+        List<Object> metrics = parse.read("$.data.doc.metrics[*]");
+
+        for (Object metric : metrics) {
+            list.add(JsonPath.read(metric, "$.fieldName"));
+        }
+        return list;
+    }
+
+    /**
      * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
      *
      * @return 用于反射生成schema类型的对象的一个map集合

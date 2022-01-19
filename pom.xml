@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-olap-analysis-schema</artifactId>
-    <version>211120-hash</version>
+    <version>20220113-balance</version>
 
     <name>log-olap-analysis-schema</name>
     <url>http://www.example.com</url>

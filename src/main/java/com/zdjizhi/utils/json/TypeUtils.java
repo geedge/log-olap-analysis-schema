@@ -39,14 +39,6 @@ public class TypeUtils {
             return ((Number) value).longValue();
         }
 
-//        if (value instanceof Map) {
-//            return (Map) value;
-//        }
-//
-//        if (value instanceof List) {
-//            return Collections.singletonList(value.toString());
-//        }
-
         if (value instanceof Boolean) {
             return (Boolean) value ? 1 : 0;
         }

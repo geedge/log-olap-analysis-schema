@@ -7,7 +7,7 @@ import com.zdjizhi.utils.functions.*;
 import com.zdjizhi.utils.kafka.Consumer;
 import com.zdjizhi.utils.kafka.Producer;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
@@ -38,19 +38,19 @@ public class StreamAggregateTopology {
             DataStream<String> streamSource = environment.addSource(Consumer.getKafkaConsumer())
                     .setParallelism(StreamAggregateConfig.SOURCE_PARALLELISM);
 
-            SingleOutputStreamOperator<Tuple4<String, String, String, String>> parseDataMap = streamSource.map(new ParseMapFunction())
+            SingleOutputStreamOperator<Tuple3<String, String, String>> parseDataMap = streamSource.map(new ParseMapFunction())
                     .name("ParseDataMap")
                     .setParallelism(StreamAggregateConfig.PARSE_PARALLELISM);
 
-            WindowedStream<Tuple4<String, String, String, String>, String, TimeWindow> firstWindow = parseDataMap.keyBy(new FirstKeyByFunction())
-                    .window(TumblingProcessingTimeWindows.of(Time.seconds(5)));
+            WindowedStream<Tuple3<String, String, String>, String, TimeWindow> firstWindow = parseDataMap.keyBy(new FirstKeyByFunction())
+                    .window(TumblingProcessingTimeWindows.of(Time.seconds(StreamAggregateConfig.FIRST_COUNT_WINDOW_TIME)));
 
             SingleOutputStreamOperator<Tuple2<String, String>> metricCountWindow = firstWindow.process(new FirstCountWindowFunction())
                     .name("FirstCountWindow")
                     .setParallelism(StreamAggregateConfig.FIRST_WINDOW_PARALLELISM);
 
             WindowedStream<Tuple2<String, String>, String, TimeWindow> secondWindow = metricCountWindow.keyBy(new SecondKeyByFunction())
-                    .window(TumblingProcessingTimeWindows.of(Time.seconds(StreamAggregateConfig.COUNT_WINDOW_TIME)));
+                    .window(TumblingProcessingTimeWindows.of(Time.seconds(StreamAggregateConfig.SECOND_COUNT_WINDOW_TIME)));
 
             SingleOutputStreamOperator<String> secondCountWindow = secondWindow.process(new SecondCountWindowFunction())
                     .name("SecondCountWindow").setParallelism(StreamAggregateConfig.SECOND_WINDOW_PARALLELISM);

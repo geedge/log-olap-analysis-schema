@@ -3,9 +3,11 @@ package com.zdjizhi.utils.general;
 
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.utils.json.JsonParseUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +23,7 @@ public class ParseFunctions {
      */
     private static HashMap<String, String> filtersMap = JsonParseUtil.getFiltersMap();
 
+    private static ArrayList<String> metricsList = JsonParseUtil.getLogMetrics();
 
     /**
      * 解析 dimensions 字段集
@@ -62,36 +65,15 @@ public class ParseFunctions {
         return available;
     }
 
-//    /**
-//     * 更新缓存中的对应关系map
-//     *
-//     * @param hashMap 当前缓存对应关系map
-//     */
-//    public static void updateAppRelation(HashMap<Integer, String> hashMap) {
-//        try {
-//            Long begin = System.currentTimeMillis();
-//            String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.APP_ID_HTTP);
-//            if (StringUtil.isNotBlank(schema)) {
-//                String data = JSONObject.parseObject(schema).getString("data");
-//                JSONArray objects = JSONArray.parseArray(data);
-//                for (Object object : objects) {
-//                    JSONArray jsonArray = JSONArray.parseArray(object.toString());
-//                    int key = jsonArray.getInteger(0);
-//                    String value = jsonArray.getString(1);
-//                    if (hashMap.containsKey(key)) {
-//                        if (!value.equals(hashMap.get(key))) {
-//                            hashMap.put(key, value);
-//                        }
-//                    } else {
-//                        hashMap.put(key, value);
-//                    }
-//                }
-//                logger.warn("更新缓存对应关系用时:" + (begin - System.currentTimeMillis()));
-//                logger.warn("更新缓存中的对应的APP关系,拉取接口数据长度:[" + objects.size());
-//            }
-//        } catch (RuntimeException e) {
-//            logger.error("更新缓存APP-ID失败,异常：" + e);
-//        }
-//    }
+    public static String getMetricsLog(Map<String, Object> object) {
+
+        Map<String, Object> json = new HashMap<>(16);
+
+        for (String fileName : metricsList) {
+            json.put(fileName, object.get(fileName));
+        }
+
+        return JsonMapper.toJsonString(json);
+    }
 
 }
