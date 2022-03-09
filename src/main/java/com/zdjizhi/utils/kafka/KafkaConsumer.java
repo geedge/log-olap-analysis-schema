@@ -14,7 +14,7 @@ import java.util.Properties;
  * @Description:
  * @date 2021/6/813:54
  */
-public class Consumer {
+public class KafkaConsumer {
     private static Properties createConsumerConfig() {
         Properties properties = new Properties();
         properties.put("bootstrap.servers", StreamAggregateConfig.SOURCE_KAFKA_SERVERS);
@@ -25,7 +25,7 @@ public class Consumer {
         properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        CertUtils.chooseCert(StreamAggregateConfig.KAFKA_SOURCE_PROTOCOL,properties);
+        CertUtils.chooseCert(StreamAggregateConfig.SOURCE_KAFKA_SERVERS, properties);
 
         return properties;
     }
