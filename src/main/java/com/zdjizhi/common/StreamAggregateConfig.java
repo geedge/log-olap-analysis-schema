@@ -2,11 +2,18 @@ package com.zdjizhi.common;
 
 
 import com.zdjizhi.utils.system.StreamAggregateConfigurations;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 
 /**
  * @author Administrator
  */
 public class StreamAggregateConfig {
+
+    private static StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+
+    static {
+        encryptor.setPassword("galaxy");
+    }
 
     public static final String FORMAT_SPLITTER = ",";
     public static final String PROTOCOL_SPLITTER = "\\.";
@@ -26,15 +33,19 @@ public class StreamAggregateConfig {
     public static final Integer SINK_PARALLELISM = StreamAggregateConfigurations.getIntProperty(0, "sink.parallelism");
     public static final Integer RANDOM_RANGE_NUM = StreamAggregateConfigurations.getIntProperty(1, "random.range.num");
 
+    /**
+     * Kafka common
+     */
+    public static final String KAFKA_SASL_JAAS_USER = encryptor.decrypt(StreamAggregateConfigurations.getStringProperty(1, "kafka.user"));
+    public static final String KAFKA_SASL_JAAS_PIN = encryptor.decrypt(StreamAggregateConfigurations.getStringProperty(1, "kafka.pin"));
+
 
     /**
-     * kafka source
+     * kafka sink config
      */
     public static final String SINK_KAFKA_SERVERS = StreamAggregateConfigurations.getStringProperty(0, "sink.kafka.servers");
     public static final String SINK_KAFKA_TOPIC = StreamAggregateConfigurations.getStringProperty(0, "sink.kafka.topic");
     public static final String PRODUCER_ACK = StreamAggregateConfigurations.getStringProperty(0, "producer.ack");
-    public static final String KAFKA_USER = StreamAggregateConfigurations.getStringProperty(1, "kafka.user");
-    public static final String KAFKA_PIN = StreamAggregateConfigurations.getStringProperty(1, "kafka.pin");
     public static final String RETRIES = StreamAggregateConfigurations.getStringProperty(1, "retries");
     public static final String LINGER_MS = StreamAggregateConfigurations.getStringProperty(1, "linger.ms");
     public static final Integer REQUEST_TIMEOUT_MS = StreamAggregateConfigurations.getIntProperty(1, "request.timeout.ms");

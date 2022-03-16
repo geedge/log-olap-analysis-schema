@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-olap-analysis-schema</artifactId>
-    <version>220309-balance</version>
+    <version>220316-encryption</version>
 
     <name>log-olap-analysis-schema</name>
     <url>http://www.example.com</url>
@@ -224,6 +224,13 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
+        <dependency>
+            <groupId>org.jasypt</groupId>
+            <artifactId>jasypt</artifactId>
+            <version>1.9.3</version>
         </dependency>
 
     </dependencies>
