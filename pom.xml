@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-olap-analysis-schema</artifactId>
-    <version>220316-encryption</version>
+    <version>220323-nacos</version>
 
     <name>log-olap-analysis-schema</name>
     <url>http://www.example.com</url>
@@ -38,6 +38,8 @@
         <hadoop.version>2.7.1</hadoop.version>
         <kafka.version>1.0.0</kafka.version>
         <hbase.version>2.2.3</hbase.version>
+        <nacos.version>1.2.0</nacos.version>
+        <zdjz.tools.version>1.0.8</zdjz.tools.version>
         <scope.type>provided</scope.type>
         <!--<scope.type>compile</scope.type>-->
     </properties>
@@ -116,7 +118,7 @@
         <dependency>
             <groupId>com.zdjizhi</groupId>
             <artifactId>galaxy</artifactId>
-            <version>1.0.7</version>
+            <version>${zdjz.tools.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-log4j12</artifactId>
@@ -184,27 +186,29 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.2</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
             <version>2.4.0</version>
         </dependency>
 
         <dependency>
-            <groupId>io.prometheus</groupId>
-            <artifactId>simpleclient_pushgateway</artifactId>
-            <version>0.9.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.5.2</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
+        <dependency>
+            <groupId>org.jasypt</groupId>
+            <artifactId>jasypt</artifactId>
+            <version>1.9.3</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.alibaba.nacos/nacos-client -->
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>${nacos.version}</version>
         </dependency>
 
         <dependency>
@@ -224,13 +228,6 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
-        <dependency>
-            <groupId>org.jasypt</groupId>
-            <artifactId>jasypt</artifactId>
-            <version>1.9.3</version>
         </dependency>
 
     </dependencies>

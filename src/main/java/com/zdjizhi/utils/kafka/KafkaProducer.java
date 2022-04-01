@@ -42,11 +42,7 @@ public class KafkaProducer {
                 createProducerConfig(), Optional.empty());
 
         //启用此选项将使生产者仅记录失败日志而不是捕获和重新抛出它们
-        kafkaProducer.setLogFailuresOnly(false);
-
-        //写入kafka的消息携带时间戳
-//        kafkaProducer.setWriteTimestampToKafka(true);
-
+        kafkaProducer.setLogFailuresOnly(true);
 
         return kafkaProducer;
     }

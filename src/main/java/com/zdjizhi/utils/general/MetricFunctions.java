@@ -1,7 +1,7 @@
 package com.zdjizhi.utils.general;
 
 
-import com.zdjizhi.utils.json.JsonTypeUtils;
+import com.zdjizhi.utils.json.JsonTypeUtil;
 
 /**
  * @author qidaijie
@@ -18,8 +18,8 @@ public class MetricFunctions {
      * @return value1 + value2
      */
     public static Long longSum(Object value1, Object value2) {
-        Long res1 = JsonTypeUtils.checkLongValue(value1);
-        Long res2 = JsonTypeUtils.checkLongValue(value2);
+        Long res1 = JsonTypeUtil.checkLongValue(value1);
+        Long res2 = JsonTypeUtil.checkLongValue(value2);
 
         return res1 + res2;
     }
@@ -32,6 +32,6 @@ public class MetricFunctions {
      */
     public static Long count(Object count) {
 
-        return JsonTypeUtils.checkLongValue(count) + 1L;
+        return JsonTypeUtil.checkLongValue(count) + 1L;
     }
 }

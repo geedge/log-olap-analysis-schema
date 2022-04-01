@@ -18,12 +18,6 @@ import java.util.Map;
  * @Version V1.0
  **/
 public class ParseFunctions {
-    /**
-     * 获取filters条件map
-     */
-    private static HashMap<String, String> filtersMap = JsonParseUtil.getFiltersMap();
-
-    private static ArrayList<String> metricsList = JsonParseUtil.getLogMetrics();
 
     /**
      * 解析 dimensions 字段集
@@ -50,7 +44,7 @@ public class ParseFunctions {
      */
     public static boolean filterLogs(Map<String, Object> object) {
         boolean available = false;
-
+        HashMap<String, String> filtersMap = JsonParseUtil.getFiltersMap();
         for (String key : filtersMap.keySet()) {
             switch (key) {
                 case "notempty":
@@ -65,11 +59,16 @@ public class ParseFunctions {
         return available;
     }
 
+    /**
+     * 根据原始日志字段，生成schema内指定的metrics指标json。
+     *
+     * @param object 原始日志json
+     * @return 统计metrics json
+     */
     public static String getMetricsLog(Map<String, Object> object) {
-
         Map<String, Object> json = new HashMap<>(16);
 
-        for (String fileName : metricsList) {
+        for (String fileName : JsonParseUtil.getMetricsFiledNameList()) {
             json.put(fileName, object.get(fileName));
         }
 

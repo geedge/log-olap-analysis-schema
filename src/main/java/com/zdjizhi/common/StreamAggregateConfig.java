@@ -19,13 +19,22 @@ public class StreamAggregateConfig {
     public static final String PROTOCOL_SPLITTER = "\\.";
 
     /**
+     * Nacos
+     */
+    public static final String NACOS_SERVER = StreamAggregateConfigurations.getStringProperty(0, "nacos.server");
+    public static final String NACOS_SCHEMA_NAMESPACE = StreamAggregateConfigurations.getStringProperty(0, "nacos.schema.namespace");
+    public static final String NACOS_DATA_ID = StreamAggregateConfigurations.getStringProperty(0, "nacos.data.id");
+    public static final String NACOS_PIN = StreamAggregateConfigurations.getStringProperty(1, "nacos.pin");
+    public static final String NACOS_GROUP = StreamAggregateConfigurations.getStringProperty(1, "nacos.group");
+    public static final String NACOS_USERNAME = StreamAggregateConfigurations.getStringProperty(1, "nacos.username");
+    
+    /**
      * System
      */
     public static final Integer SOURCE_PARALLELISM = StreamAggregateConfigurations.getIntProperty(0, "source.parallelism");
     public static final Integer PARSE_PARALLELISM = StreamAggregateConfigurations.getIntProperty(0, "parse.parallelism");
     public static final Integer FIRST_WINDOW_PARALLELISM = StreamAggregateConfigurations.getIntProperty(0, "first.window.parallelism");
     public static final Integer SECOND_WINDOW_PARALLELISM = StreamAggregateConfigurations.getIntProperty(0, "second.window.parallelism");
-    public static final Integer APP_TICK_TUPLE_FREQ_SECS = StreamAggregateConfigurations.getIntProperty(1, "app.tick.tuple.freq.secs");
     public static final Integer FIRST_COUNT_WINDOW_TIME = StreamAggregateConfigurations.getIntProperty(0, "first.count.window.time");
     public static final Integer SECOND_COUNT_WINDOW_TIME = StreamAggregateConfigurations.getIntProperty(0, "second.count.window.time");
     public static final String TOOLS_LIBRARY = StreamAggregateConfigurations.getStringProperty(0, "tools.library");
@@ -45,7 +54,7 @@ public class StreamAggregateConfig {
      */
     public static final String SINK_KAFKA_SERVERS = StreamAggregateConfigurations.getStringProperty(0, "sink.kafka.servers");
     public static final String SINK_KAFKA_TOPIC = StreamAggregateConfigurations.getStringProperty(0, "sink.kafka.topic");
-    public static final String PRODUCER_ACK = StreamAggregateConfigurations.getStringProperty(0, "producer.ack");
+    public static final String PRODUCER_ACK = StreamAggregateConfigurations.getStringProperty(1, "producer.ack");
     public static final String RETRIES = StreamAggregateConfigurations.getStringProperty(1, "retries");
     public static final String LINGER_MS = StreamAggregateConfigurations.getStringProperty(1, "linger.ms");
     public static final Integer REQUEST_TIMEOUT_MS = StreamAggregateConfigurations.getIntProperty(1, "request.timeout.ms");
@@ -68,13 +77,7 @@ public class StreamAggregateConfig {
     /**
      * kafka限流配置-20201117
      */
-    public static final String PRODUCER_KAFKA_COMPRESSION_TYPE = StreamAggregateConfigurations.getStringProperty(0, "producer.kafka.compression.type");
-
-    /**
-     * http
-     */
-    public static final String SCHEMA_HTTP = StreamAggregateConfigurations.getStringProperty(0, "schema.http");
-    public static final String APP_ID_HTTP = StreamAggregateConfigurations.getStringProperty(0, "app.id.http");
+    public static final String PRODUCER_KAFKA_COMPRESSION_TYPE = StreamAggregateConfigurations.getStringProperty(1, "producer.kafka.compression.type");
 
 
 }

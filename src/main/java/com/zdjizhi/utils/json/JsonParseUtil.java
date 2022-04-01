@@ -1,17 +1,21 @@
 package com.zdjizhi.utils.json;
 
-
 import cn.hutool.log.Log;
 import cn.hutool.log.LogFactory;
+import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.PropertyKeyConst;
+import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.nacos.api.config.listener.Listener;
+import com.alibaba.nacos.api.exception.NacosException;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.zdjizhi.common.StreamAggregateConfig;
 import com.zdjizhi.utils.JsonMapper;
-import com.zdjizhi.utils.http.HttpClientUtil;
-import net.sf.cglib.beans.BeanGenerator;
+import com.zdjizhi.utils.StringUtil;
 import net.sf.cglib.beans.BeanMap;
 
 import java.util.*;
+import java.util.concurrent.Executor;
 
 /**
  * 使用FastJson解析json的工具类
@@ -21,74 +25,76 @@ import java.util.*;
 public class JsonParseUtil {
 
     private static final Log logger = LogFactory.get();
+    private static Properties propNacos = new Properties();
 
     /**
-     * 模式匹配，给定一个类型字符串返回一个类类型
-     *
-     * @param type 类型
-     * @return 类类型
+     * 获取actions所有的计算函数
      */
-
-    public static Class getClassName(String type) {
-        Class clazz;
-
-        switch (type) {
-            case "int":
-                clazz = Integer.class;
-                break;
-            case "string":
-                clazz = String.class;
-                break;
-            case "long":
-                clazz = long.class;
-                break;
-            case "array":
-                clazz = List.class;
-                break;
-            case "double":
-                clazz = double.class;
-                break;
-            case "float":
-                clazz = float.class;
-                break;
-            case "char":
-                clazz = char.class;
-                break;
-            case "byte":
-                clazz = byte.class;
-                break;
-            case "boolean":
-                clazz = boolean.class;
-                break;
-            case "short":
-                clazz = short.class;
-                break;
-            default:
-                clazz = String.class;
-        }
-        return clazz;
-    }
-
+    private static HashMap<String, String[]> actionMap = new HashMap<>(16);
 
     /**
-     * 获取属性值的方法
-     *
-     * @param obj      对象
-     * @param property key
-     * @return 属性的值
+     * 解析metrics指标字段信息
      */
-    public static Object getValue(Object obj, String property) {
+    private static HashMap<String, String[]> metricFunctionsMap = new HashMap<>(16);
 
+    /**
+     * 解析dimensions维度字段信息
+     */
+    private static HashMap<String, String> dimensionsMap = new HashMap<>(16);
+
+    /**
+     * 解析filters过滤信息
+     */
+    private static HashMap<String, String> filtersMap = new HashMap<>(16);
+
+    /**
+     * 解析transforms转换函数信息
+     */
+    private static ArrayList<String[]> transformsList = new ArrayList<>();
+
+    /**
+     * 解析metrics指标字段集
+     */
+    private static ArrayList<String> metricsFiledNameList = new ArrayList<>();
+
+    /**
+     * 解析hierarchy函数，获取切分信息
+     */
+    private static String[] hierarchy;
+
+    /**
+     * 解析时间戳字段名称
+     */
+    private static String resultTimeKey = "stat_time";
+
+    static {
+        propNacos.setProperty(PropertyKeyConst.SERVER_ADDR, StreamAggregateConfig.NACOS_SERVER);
+        propNacos.setProperty(PropertyKeyConst.NAMESPACE, StreamAggregateConfig.NACOS_SCHEMA_NAMESPACE);
+        propNacos.setProperty(PropertyKeyConst.USERNAME, StreamAggregateConfig.NACOS_USERNAME);
+        propNacos.setProperty(PropertyKeyConst.PASSWORD, StreamAggregateConfig.NACOS_PIN);
         try {
-            BeanMap beanMap = BeanMap.create(obj);
-            if (beanMap.containsKey(property)) {
-                return beanMap.get(property);
-            } else {
-                return null;
+            ConfigService configService = NacosFactory.createConfigService(propNacos);
+            String dataId = StreamAggregateConfig.NACOS_DATA_ID;
+            String group = StreamAggregateConfig.NACOS_GROUP;
+            String schema = configService.getConfig(dataId, group, 5000);
+            if (StringUtil.isNotBlank(schema)) {
+                parseSchema(schema);
             }
-        } catch (RuntimeException e) {
-            logger.error("获取json-value异常，异常key：" + property + "异常信息为：" + e);
-            return null;
+            configService.addListener(dataId, group, new Listener() {
+                @Override
+                public Executor getExecutor() {
+                    return null;
+                }
+
+                @Override
+                public void receiveConfigInfo(String configMsg) {
+                    if (StringUtil.isNotBlank(configMsg)) {
+                        parseSchema(configMsg);
+                    }
+                }
+            });
+        } catch (NacosException e) {
+            logger.error("Get Schema config from Nacos error,The exception message is :" + e.getMessage());
         }
     }
 
@@ -103,7 +109,7 @@ public class JsonParseUtil {
         try {
             return jsonMap.getOrDefault(property, null);
         } catch (RuntimeException e) {
-            logger.error("获取json-value异常，异常key：" + property + "异常信息为：" + e);
+            logger.error("Get the JSON value is abnormal,The key is :" + property + "error message is :" + e);
             return null;
         }
     }
@@ -152,7 +158,7 @@ public class JsonParseUtil {
         try {
             jsonMap.put(property, value);
         } catch (RuntimeException e) {
-            logger.error("赋予实体类错误类型数据", e);
+            logger.error("The JSON set value is abnormal,the error message is :", e);
         }
     }
 
@@ -173,203 +179,129 @@ public class JsonParseUtil {
     }
 
     /**
-     * 根据反射生成对象的方法
-     *
-     * @param properties 反射类用的map
-     * @return 生成的Object类型的对象
-     */
-    public static Object generateObject(Map properties) {
-        BeanGenerator generator = new BeanGenerator();
-        Set keySet = properties.keySet();
-        for (Object aKeySet : keySet) {
-            String key = (String) aKeySet;
-            generator.addProperty(key, (Class) properties.get(key));
-        }
-        return generator.create();
-    }
-
-    /**
      * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
-     *
-     * @return 用于反射生成schema类型的对象的一个map集合
+     * 用于反射生成schema类型的对象的一个map集合
      */
-    public static HashMap<String, String[]> getActionMap() {
-        HashMap<String, String[]> map = new HashMap<>(16);
-
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
+    private static void parseSchema(String schema) {
+        clearCacheMap();
         DocumentContext parse = JsonPath.parse(schema);
 
-        List<Object> actions = parse.read("$.data.doc.action[*]");
-
+        List<Object> actions = parse.read("$.doc.action[*]");
         for (Object action : actions) {
-            map.put(JsonPath.read(action, "$.label"),
+            actionMap.put(JsonPath.read(action, "$.label"),
                     JsonPath.read(action, "$.metrics").toString().split(StreamAggregateConfig.FORMAT_SPLITTER));
-//            System.out.println(JsonPath.read(action, "$.label")+JsonPath.read(action, "$.metrics").toString());
         }
 
-        return map;
-    }
-
-    /**
-     * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
-     *
-     * @return 用于反射生成schema类型的对象的一个map集合
-     */
-    public static HashMap<String, String[]> getMetricsMap() {
-        HashMap<String, String[]> map = new HashMap<>(16);
-
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-        DocumentContext parse = JsonPath.parse(schema);
-
-        List<Object> metrics = parse.read("$.data.doc.metrics[*]");
-
-        for (Object metric : metrics) {
-            map.put(JsonPath.read(metric, "$.name"),
+        List<Object> metricFunctions = parse.read("$.doc.metrics[*]");
+        for (Object metric : metricFunctions) {
+            metricFunctionsMap.put(JsonPath.read(metric, "$.name"),
                     new String[]{JsonPath.read(metric, "$.function"), JsonPath.read(metric, "$.fieldName")}
             );
         }
-        return map;
-    }
 
-    /**
-     * 获取Metrics内指标，用于过滤原始日志
-     *
-     * @return 指标列原始名称
-     */
-    public static ArrayList<String> getLogMetrics() {
-        ArrayList<String> list = new ArrayList<>();
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-        DocumentContext parse = JsonPath.parse(schema);
-
-        List<Object> metrics = parse.read("$.data.doc.metrics[*]");
-
+        List<Object> metrics = parse.read("$.doc.metrics[*]");
         for (Object metric : metrics) {
-            list.add(JsonPath.read(metric, "$.fieldName"));
+            metricsFiledNameList.add(JsonPath.read(metric, "$.fieldName"));
         }
-        return list;
-    }
 
-    /**
-     * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
-     *
-     * @return 用于反射生成schema类型的对象的一个map集合
-     */
-    public static String getTimeKey() {
-
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-
-        return JsonPath.read(schema, "$.data.doc.timestamp.name");
-    }
-
-
-    /**
-     * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
-     *
-     * @return 用于反射生成schema类型的对象的一个map集合
-     */
-    public static HashMap<String, Class> getResultLogMap() {
-        HashMap<String, Class> map = new HashMap<>(16);
-
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-        DocumentContext parse = JsonPath.parse(schema);
-
-        List<Object> dimensions = parse.read("$.data.doc.dimensions[*]");
-
+        List<Object> dimensions = parse.read("$.doc.dimensions[*]");
         for (Object dimension : dimensions) {
-            map.put(JsonPath.read(dimension, "$.name"),
-                    JsonParseUtil.getClassName(JsonPath.read(dimension, "$.type")));
-        }
-
-        List<Object> metrics = parse.read("$.data.doc.metrics[*]");
-        for (Object metric : metrics) {
-            map.put(JsonPath.read(metric, "$.name"),
-                    JsonParseUtil.getClassName(JsonPath.read(metric, "$.type")));
-        }
-
-        return map;
-    }
-
-    /**
-     * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
-     *
-     * @return 用于反射生成schema类型的对象的一个map集合
-     */
-    public static HashMap<String, String> getDimensionsMap() {
-        HashMap<String, String> map = new HashMap<>(16);
-
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-        DocumentContext parse = JsonPath.parse(schema);
-
-        List<Object> dimensions = parse.read("$.data.doc.dimensions[*]");
-
-        for (Object dimension : dimensions) {
-            map.put(JsonPath.read(dimension, "$.name"),
+            dimensionsMap.put(JsonPath.read(dimension, "$.name"),
                     JsonPath.read(dimension, "$.fieldName"));
         }
 
-        return map;
-    }
-
-
-    /**
-     * 通过获取String类型的网关schema链接来获取map，用于生成一个Object类型的对象
-     *
-     * @return 用于反射生成schema类型的对象的一个map集合
-     */
-    public static HashMap<String, String> getFiltersMap() {
-        HashMap<String, String> map = new HashMap<>(16);
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-        DocumentContext parse = JsonPath.parse(schema);
-
-        List<Object> filters = parse.read("$.data.doc.filters[*]");
+        List<Object> filters = parse.read("$.doc.filters[*]");
         for (Object filter : filters) {
-            map.put(JsonPath.read(filter, "$.type"), JsonPath.read(filter, "$.fieldName"));
+            filtersMap.put(JsonPath.read(filter, "$.type"), JsonPath.read(filter, "$.fieldName"));
         }
 
-        return map;
-    }
-
-
-    /**
-     * 根据http链接获取schema，解析之后返回一个任务列表 (useList toList funcList paramlist)
-     *
-     * @return 任务列表
-     */
-    public static ArrayList<String[]> getTransformsList() {
-        ArrayList<String[]> list = new ArrayList<>();
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-        DocumentContext parse = JsonPath.parse(schema);
-
-        List<Object> transforms = parse.read("$.data.doc.transforms[*]");
+        List<Object> transforms = parse.read("$.doc.transforms[*]");
         for (Object transform : transforms) {
             String function = JsonPath.read(transform, "$.function").toString();
             String name = JsonPath.read(transform, "$.name").toString();
             String fieldName = JsonPath.read(transform, "$.fieldName").toString();
             String parameters = JsonPath.read(transform, "$.parameters").toString();
-            list.add(new String[]{function, name, fieldName, parameters});
+            transformsList.add(new String[]{function, name, fieldName, parameters});
         }
 
-        return list;
-    }
-
-    /**
-     * 根据http链接获取schema，解析之后返回一个任务列表 (useList toList funcList paramlist)
-     *
-     * @return 任务列表
-     */
-    public static String[] getHierarchy() {
-        String schema = HttpClientUtil.requestByGetMethod(StreamAggregateConfig.SCHEMA_HTTP);
-        DocumentContext parse = JsonPath.parse(schema);
-        List<Object> transforms = parse.read("$.data.doc.transforms[*]");
-        for (Object transform : transforms) {
+        List<Object> hierarchyList = parse.read("$.doc.transforms[*]");
+        for (Object transform : hierarchyList) {
             String function = JsonPath.read(transform, "$.function").toString();
             if ("hierarchy".equals(function)) {
                 String name = JsonPath.read(transform, "$.name").toString();
                 String parameters = JsonPath.read(transform, "$.parameters").toString();
-                return new String[]{name, parameters};
+                hierarchy = new String[]{name, parameters};
             }
         }
-        return null;
+
+        resultTimeKey = JsonPath.read(schema, "$.doc.timestamp.name");
     }
 
+    /**
+     * @return 解析schema获取的actions集合
+     */
+    public static HashMap<String, String[]> getActionMap() {
+        return actionMap;
+    }
+
+    /**
+     * @return 解析schema获取的指标统计方式集合
+     */
+    public static HashMap<String, String[]> getMetricFunctionsMap() {
+        return metricFunctionsMap;
+    }
+
+    /**
+     * @return 解析schema获取的维度集合
+     */
+    public static HashMap<String, String> getDimensionsMap() {
+        return dimensionsMap;
+    }
+
+    /**
+     * @return 解析schema获取的过滤规则集合
+     */
+    public static HashMap<String, String> getFiltersMap() {
+        return filtersMap;
+    }
+
+    /**
+     * @return 解析schema获取的操作集合
+     */
+    public static ArrayList<String[]> getTransformsList() {
+        return transformsList;
+    }
+
+    /**
+     * @return 解析schema获取的指标字段集合
+     */
+    public static ArrayList<String> getMetricsFiledNameList() {
+        return metricsFiledNameList;
+    }
+
+    /**
+     * @return 解析schema获取的拆解函数
+     */
+    public static String[] getHierarchy() {
+        return hierarchy;
+    }
+
+    /**
+     * @return 解析schema获取的时间字段的key
+     */
+    public static String getResultTimeKey() {
+        return resultTimeKey;
+    }
+
+    /**
+     * 在配置变化时清空缓存，重新解析schema更新缓存
+     */
+    private static void clearCacheMap() {
+        actionMap.clear();
+        metricFunctionsMap.clear();
+        dimensionsMap.clear();
+        filtersMap.clear();
+        transformsList.clear();
+        metricsFiledNameList.clear();
+    }
 }

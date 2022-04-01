@@ -25,14 +25,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SecondCountWindowFunction extends ProcessWindowFunction<Tuple2<String, String>, String, String, TimeWindow> {
     private static final Logger logger = LoggerFactory.getLogger(SecondCountWindowFunction.class);
 
-    private static HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricsMap();
     private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(320);
-    private static String resultTimeKey = JsonParseUtil.getTimeKey();
 
     @Override
     @SuppressWarnings("unchecked")
     public void process(String key, Context context, Iterable<Tuple2<String, String>> input, Collector<String> output) {
         try {
+            HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricFunctionsMap();
             for (Tuple2<String, String> tuple : input) {
                 String dimensions = tuple.f0;
                 String message = tuple.f1;
@@ -57,7 +56,7 @@ public class SecondCountWindowFunction extends ProcessWindowFunction<Tuple2<Stri
 
                 for (String countKey : cacheMap.keySet()) {
                     Map<String, Object> resultMap = cacheMap.get(countKey);
-                    JsonParseUtil.setValue(resultMap, resultTimeKey, endTime);
+                    JsonParseUtil.setValue(resultMap, JsonParseUtil.getResultTimeKey(), endTime);
                     output.collect(JsonMapper.toJsonString(resultMap));
                 }
             }

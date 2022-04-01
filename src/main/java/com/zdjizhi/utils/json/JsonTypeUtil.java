@@ -1,7 +1,6 @@
 package com.zdjizhi.utils.json;
 
-import cn.hutool.log.Log;
-import cn.hutool.log.LogFactory;
+
 import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.utils.exception.AnalysisException;
 
@@ -14,8 +13,7 @@ import java.util.Map;
  * @Description:
  * @date 2021/7/1217:34
  */
-public class JsonTypeUtils {
-    private static final Log logger = LogFactory.get();
+public class JsonTypeUtil {
     /**
      * String 类型检验转换方法
      *

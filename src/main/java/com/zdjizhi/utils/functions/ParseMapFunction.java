@@ -29,17 +29,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ParseMapFunction implements MapFunction<String, Tuple3<String, String, String>> {
     private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
 
-    private static ArrayList<String[]> jobList = JsonParseUtil.getTransformsList();
-
-    private static HashMap<String, String> dimensionsMap = JsonParseUtil.getDimensionsMap();
-
     @Override
     @SuppressWarnings("unchecked")
     public Tuple3<String, String, String> map(String message) {
         try {
+            ArrayList<String[]> jobList = JsonParseUtil.getTransformsList();
+            HashMap<String, String> dimensionsMap = JsonParseUtil.getDimensionsMap();
             if (StringUtil.isNotBlank(message)) {
                 Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
-//                String streamTraceId = JsonMapperParseUtil.getString(object, "common_stream_trace_id");
                 Map<String, Object> dimensionsObj = ParseFunctions.transDimensions(dimensionsMap, object);
                 if (ParseFunctions.filterLogs(object)) {
                     for (String[] strings : jobList) {
@@ -126,7 +123,6 @@ public class ParseMapFunction implements MapFunction<String, Tuple3<String, Stri
             } else {
                 dimensions.put(resultKeyName, combinationField);
                 JsonParseUtil.setValue(message, fieldName, combinationField);
-
             }
         }
     }

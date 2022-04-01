@@ -24,21 +24,21 @@ import java.util.Map;
 public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple3<String, String, String>, Tuple2<String, String>, String, TimeWindow> {
     private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
 
-    private static HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricsMap();
-    private static HashMap<String, String[]> actionMap = JsonParseUtil.getActionMap();
     private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(320);
 
     @Override
     @SuppressWarnings("unchecked")
     public void process(String key, Context context, Iterable<Tuple3<String, String, String>> input, Collector<Tuple2<String, String>> output) {
         try {
+            HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricFunctionsMap();
+            HashMap<String, String[]> actionMap = JsonParseUtil.getActionMap();
             for (Tuple3<String, String, String> tuple : input) {
                 String label = tuple.f0;
                 String dimensions = tuple.f1;
                 String message = tuple.f2;
-                String l7_Protocol = label.substring(0, label.indexOf("@"));
+                String l7Protocol = label.substring(0, label.indexOf("@"));
                 //action中某个协议的所有function,如果没有就默认
-                String[] metricNames = actionMap.getOrDefault(l7_Protocol, actionMap.get("Default"));
+                String[] metricNames = actionMap.getOrDefault(l7Protocol, actionMap.get("Default"));
                 if (StringUtil.isNotBlank(message)) {
                     Map<String, Object> dimensionsObj = (Map<String, Object>) JsonMapper.fromJsonString(dimensions, Map.class);
                     Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);

@@ -30,13 +30,11 @@ public class StreamAggregateTopology {
         try {
             final StreamExecutionEnvironment environment = StreamExecutionEnvironment.getExecutionEnvironment();
 
-//            environment.enableCheckpointing(5000);
-
             //两个输出之间的最大时间 (单位milliseconds)
             environment.setBufferTimeout(StreamAggregateConfig.BUFFER_TIMEOUT);
 
             DataStream<String> streamSource = environment.addSource(KafkaConsumer.getKafkaConsumer())
-                    .setParallelism(StreamAggregateConfig.SOURCE_PARALLELISM);
+                    .setParallelism(StreamAggregateConfig.SOURCE_PARALLELISM).name(StreamAggregateConfig.SOURCE_KAFKA_TOPIC);
 
             SingleOutputStreamOperator<Tuple3<String, String, String>> parseDataMap = streamSource.map(new ParseMapFunction())
                     .name("ParseDataMap")
@@ -55,8 +53,11 @@ public class StreamAggregateTopology {
             SingleOutputStreamOperator<String> secondCountWindow = secondWindow.process(new SecondCountWindowFunction())
                     .name("SecondCountWindow").setParallelism(StreamAggregateConfig.SECOND_WINDOW_PARALLELISM);
 
-            secondCountWindow.flatMap(new ResultFlatMapFunction()).name("ResultFlatMap").setParallelism(StreamAggregateConfig.SINK_PARALLELISM)
-                    .addSink(KafkaProducer.getKafkaProducer()).name("LogSinkKafka").setParallelism(StreamAggregateConfig.SINK_PARALLELISM);
+            SingleOutputStreamOperator<String> resultFlatMap = secondCountWindow.flatMap(new ResultFlatMapFunction())
+                    .name("ResultFlatMap").setParallelism(StreamAggregateConfig.SINK_PARALLELISM);
+
+            resultFlatMap.addSink(KafkaProducer.getKafkaProducer()).name("LogSinkKafka")
+                    .setParallelism(StreamAggregateConfig.SINK_PARALLELISM).name(StreamAggregateConfig.SINK_KAFKA_TOPIC);
 
             environment.execute(args[0]);
         } catch (Exception e) {

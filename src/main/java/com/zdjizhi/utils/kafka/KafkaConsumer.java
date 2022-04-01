@@ -22,19 +22,25 @@ public class KafkaConsumer {
         properties.put("session.timeout.ms", StreamAggregateConfig.SESSION_TIMEOUT_MS);
         properties.put("max.poll.records", StreamAggregateConfig.MAX_POLL_RECORDS);
         properties.put("max.partition.fetch.bytes", StreamAggregateConfig.MAX_PARTITION_FETCH_BYTES);
-        properties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        properties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
         CertUtils.chooseCert(StreamAggregateConfig.SOURCE_KAFKA_SERVERS, properties);
 
         return properties;
     }
 
+    /**
+     * 官方序列化kafka数据
+     *
+     * @return kafka logs
+     */
     public static FlinkKafkaConsumer<String> getKafkaConsumer() {
         FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<>(StreamAggregateConfig.SOURCE_KAFKA_TOPIC,
                 new SimpleStringSchema(), createConsumerConfig());
 
+        //随着checkpoint提交，将offset提交到kafka
         kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
+
+        //从消费组当前的offset开始消费
         kafkaConsumer.setStartFromGroupOffsets();
 
         return kafkaConsumer;
