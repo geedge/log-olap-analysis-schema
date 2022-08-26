@@ -1,11 +1,12 @@
-package com.zdjizhi.utils.functions;
+package com.zdjizhi.utils.functions.statistics;
 
 import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.utils.general.MetricFunctions;
+import com.zdjizhi.utils.general.ParseFunctions;
 import com.zdjizhi.utils.json.JsonParseUtil;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
@@ -14,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author qidaijie
@@ -22,42 +22,45 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Description:
  * @date 2021/7/2113:55
  */
-public class SecondCountWindowFunction extends ProcessWindowFunction<Tuple2<String, String>, String, String, TimeWindow> {
-    private static final Logger logger = LoggerFactory.getLogger(SecondCountWindowFunction.class);
+public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple3<String, String, String>, Tuple2<String, String>, String, TimeWindow> {
+    private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
 
-    private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(320);
+    private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(16);
 
     @Override
     @SuppressWarnings("unchecked")
-    public void process(String key, Context context, Iterable<Tuple2<String, String>> input, Collector<String> output) {
+    public void process(String key, Context context, Iterable<Tuple3<String, String, String>> input, Collector<Tuple2<String, String>> output) {
         try {
             HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricFunctionsMap();
-            for (Tuple2<String, String> tuple : input) {
-                String dimensions = tuple.f0;
-                String message = tuple.f1;
-                if (StringUtil.isNotBlank(message)) {
+            HashMap<String, String[]> actionMap = JsonParseUtil.getActionMap();
+            for (Tuple3<String, String, String> tuple : input) {
+                String groupKey = tuple.f0;
+                String protocol = groupKey.substring(0, groupKey.indexOf("@"));
+                String dimensions = tuple.f1;
+                String metrics = tuple.f2;
+                //action中某个协议的所有action,如果没有就默认
+                String[] protocolMetrics = actionMap.getOrDefault(protocol, actionMap.get("Default"));
+                if (StringUtil.isNotBlank(metrics)) {
                     Map<String, Object> dimensionsObj = (Map<String, Object>) JsonMapper.fromJsonString(dimensions, Map.class);
-                    Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
+                    Map<String, Object> metricsObj = (Map<String, Object>) JsonMapper.fromJsonString(metrics, Map.class);
 
                     Map<String, Object> cacheMessage = cacheMap.getOrDefault(dimensions, dimensionsObj);
-                    for (String name : metricsMap.keySet()) {
-                        String[] metrics = metricsMap.get(name);
-                        String function = metrics[0];
-                        functionSet(function, cacheMessage, name, cacheMessage.get(name), JsonParseUtil.getValue(object, name));
+                    for (String protocolMetric : protocolMetrics) {
+                        String[] functions = metricsMap.get(protocolMetric);
+                        String function = functions[0];
+                        String fieldName = functions[1];
+                        functionSet(function, cacheMessage, protocolMetric, cacheMessage.get(protocolMetric), JsonParseUtil.getValue(metricsObj, fieldName));
 
                     }
-
                     cacheMap.put(dimensions, cacheMessage);
                 }
             }
 
             if (!cacheMap.isEmpty()) {
-                Long endTime = context.window().getEnd() / 1000;
-
-                for (String countKey : cacheMap.keySet()) {
-                    Map<String, Object> resultMap = cacheMap.get(countKey);
-                    JsonParseUtil.setValue(resultMap, JsonParseUtil.getResultTimeKey(), endTime);
-                    output.collect(JsonMapper.toJsonString(resultMap));
+                for (String dimensions : cacheMap.keySet()) {
+                    Map<String, Object> resultMap = cacheMap.get(dimensions);
+                    System.out.println("resultMap"+resultMap.toString());
+                    output.collect(new Tuple2<>(dimensions, JsonMapper.toJsonString(resultMap)));
                 }
             }
 

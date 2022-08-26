@@ -1,4 +1,4 @@
-package com.zdjizhi.utils.functions;
+package com.zdjizhi.utils.functions.filter;
 
 import com.zdjizhi.utils.StringUtil;
 import org.apache.flink.api.common.functions.FilterFunction;

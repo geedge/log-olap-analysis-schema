@@ -1,11 +1,10 @@
-package com.zdjizhi.utils.functions;
+package com.zdjizhi.utils.functions.statistics;
 
 import com.zdjizhi.utils.JsonMapper;
 import com.zdjizhi.utils.StringUtil;
 import com.zdjizhi.utils.general.MetricFunctions;
 import com.zdjizhi.utils.json.JsonParseUtil;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
@@ -21,34 +20,28 @@ import java.util.Map;
  * @Description:
  * @date 2021/7/2113:55
  */
-public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple3<String, String, String>, Tuple2<String, String>, String, TimeWindow> {
-    private static final Logger logger = LoggerFactory.getLogger(FirstCountWindowFunction.class);
+public class SecondCountWindowFunction extends ProcessWindowFunction<Tuple2<String, String>, String, String, TimeWindow> {
+    private static final Logger logger = LoggerFactory.getLogger(SecondCountWindowFunction.class);
 
-    private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(320);
+    private HashMap<String, Map<String, Object>> cacheMap = new HashMap<>(16);
 
     @Override
     @SuppressWarnings("unchecked")
-    public void process(String key, Context context, Iterable<Tuple3<String, String, String>> input, Collector<Tuple2<String, String>> output) {
+    public void process(String key, Context context, Iterable<Tuple2<String, String>> input, Collector<String> output) {
         try {
             HashMap<String, String[]> metricsMap = JsonParseUtil.getMetricFunctionsMap();
-            HashMap<String, String[]> actionMap = JsonParseUtil.getActionMap();
-            for (Tuple3<String, String, String> tuple : input) {
-                String label = tuple.f0;
-                String dimensions = tuple.f1;
-                String message = tuple.f2;
-                String l7Protocol = label.substring(0, label.indexOf("@"));
-                //action中某个协议的所有function,如果没有就默认
-                String[] metricNames = actionMap.getOrDefault(l7Protocol, actionMap.get("Default"));
+            for (Tuple2<String, String> tuple : input) {
+                String dimensions = tuple.f0;
+                String message = tuple.f1;
                 if (StringUtil.isNotBlank(message)) {
                     Map<String, Object> dimensionsObj = (Map<String, Object>) JsonMapper.fromJsonString(dimensions, Map.class);
                     Map<String, Object> object = (Map<String, Object>) JsonMapper.fromJsonString(message, Map.class);
 
                     Map<String, Object> cacheMessage = cacheMap.getOrDefault(dimensions, dimensionsObj);
-                    for (String name : metricNames) {
+                    for (String name : metricsMap.keySet()) {
                         String[] metrics = metricsMap.get(name);
                         String function = metrics[0];
-                        String fieldName = metrics[1];
-                        functionSet(function, cacheMessage, name, cacheMessage.get(name), JsonParseUtil.getValue(object, fieldName));
+                        functionSet(function, cacheMessage, name, cacheMessage.get(name), JsonParseUtil.getValue(object, name));
 
                     }
                     cacheMap.put(dimensions, cacheMessage);
@@ -56,9 +49,12 @@ public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple3<Strin
             }
 
             if (!cacheMap.isEmpty()) {
-                for (String dimensions : cacheMap.keySet()) {
-                    Map<String, Object> resultMap = cacheMap.get(dimensions);
-                    output.collect(new Tuple2<>(dimensions, JsonMapper.toJsonString(resultMap)));
+                Long endTime = context.window().getEnd() / 1000;
+
+                for (String countKey : cacheMap.keySet()) {
+                    Map<String, Object> resultMap = cacheMap.get(countKey);
+                    JsonParseUtil.setValue(resultMap, JsonParseUtil.getResultTimeKey(), endTime);
+                    output.collect(JsonMapper.toJsonString(resultMap));
                 }
             }
 

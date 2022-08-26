@@ -6,7 +6,7 @@
 
     <groupId>com.zdjizhi</groupId>
     <artifactId>log-olap-analysis-schema</artifactId>
-    <version>220323-nacos</version>
+    <version>220822-VSYS</version>
 
     <name>log-olap-analysis-schema</name>
     <url>http://www.example.com</url>
@@ -194,7 +194,7 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <version>5.5.2</version>
+            <version>5.7.17</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.jasypt/jasypt -->
@@ -209,18 +209,6 @@
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>
             <version>${nacos.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.21</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.21</version>
         </dependency>
 
         <dependency>

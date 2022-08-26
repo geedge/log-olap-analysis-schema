@@ -102,14 +102,14 @@ public class JsonParseUtil {
      * 获取属性值的方法
      *
      * @param jsonMap  原始日志
-     * @param property key
+     * @param key josn key名称
      * @return 属性的值
      */
-    public static Object getValue(Map<String, Object> jsonMap, String property) {
+    public static Object getValue(Map<String, Object> jsonMap, String key) {
         try {
-            return jsonMap.getOrDefault(property, null);
+            return jsonMap.getOrDefault(key, null);
         } catch (RuntimeException e) {
-            logger.error("Get the JSON value is abnormal,The key is :" + property + "error message is :" + e);
+            logger.error("Get the JSON value is abnormal,The key is :" + key + "error message is :" + e);
             return null;
         }
     }
@@ -159,22 +159,6 @@ public class JsonParseUtil {
             jsonMap.put(property, value);
         } catch (RuntimeException e) {
             logger.error("The JSON set value is abnormal,the error message is :", e);
-        }
-    }
-
-    /**
-     * 更新属性值的方法
-     *
-     * @param obj      对象
-     * @param property 更新的key
-     * @param value    更新的值
-     */
-    public static void setValue(Object obj, String property, Object value) {
-        try {
-            BeanMap beanMap = BeanMap.create(obj);
-            beanMap.put(property, value);
-        } catch (ClassCastException e) {
-            logger.error("赋予实体类错误类型数据", e);
         }
     }
 

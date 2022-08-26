@@ -7,6 +7,7 @@ import com.zdjizhi.utils.json.JsonParseUtil;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.util.Collector;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**

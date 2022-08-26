@@ -1,4 +1,4 @@
-package com.zdjizhi.utils.functions;
+package com.zdjizhi.utils.functions.keyby;
 
 import cn.hutool.core.util.RandomUtil;
 import com.zdjizhi.common.StreamAggregateConfig;
@@ -16,7 +16,6 @@ public class SecondKeyByFunction implements KeySelector<Tuple2<String,String>, S
 
     @Override
     public String getKey(Tuple2<String, String> value) throws Exception {
-
         //以map拼接的key分组
         return value.f0;
     }

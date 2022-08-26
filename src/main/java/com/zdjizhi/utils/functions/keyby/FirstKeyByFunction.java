@@ -1,4 +1,4 @@
-package com.zdjizhi.utils.functions;
+package com.zdjizhi.utils.functions.keyby;
 
 import cn.hutool.core.util.RandomUtil;
 import com.zdjizhi.common.StreamAggregateConfig;
@@ -16,7 +16,7 @@ public class FirstKeyByFunction implements KeySelector<Tuple3< String, String, S
 
     @Override
     public String getKey(Tuple3<String, String, String> value) throws Exception {
-//        //以map拼接的key分组
+        //以map拼接的key分组
         return value.f0;
     }
 }
