@@ -18,6 +18,7 @@ import java.util.Map;
  */
 public class ResultFlatMapFunction implements FlatMapFunction<String, String> {
     private static String[] jobList = JsonParseUtil.getHierarchy();
+    private static final String APP_NAME = "app_name";
 
     @Override
     @SuppressWarnings("unchecked")
@@ -26,6 +27,8 @@ public class ResultFlatMapFunction implements FlatMapFunction<String, String> {
         String name = jobList[0];
         Map<String, Object> jsonObject = (Map<String, Object>) JsonMapper.fromJsonString(value, Map.class);
         String protocol = JsonParseUtil.getString(jsonObject, name);
+        String appName = JsonParseUtil.getString(jsonObject, APP_NAME);
+        jsonObject.remove(APP_NAME);
         if (StringUtil.isNotBlank(protocol)) {
             String[] protocolIds = protocol.split(StreamAggregateConfig.PROTOCOL_SPLITTER);
             for (String proto : protocolIds) {
@@ -35,6 +38,9 @@ public class ResultFlatMapFunction implements FlatMapFunction<String, String> {
                     out.collect(JsonMapper.toJsonString(jsonObject));
                 } else {
                     stringBuffer.append(jobList[1]).append(proto);
+                    if (proto.equals(appName)) {
+                        jsonObject.put(APP_NAME, appName);
+                    }
                     jsonObject.put(name, stringBuffer.toString());
                     out.collect(JsonMapper.toJsonString(jsonObject));
                 }

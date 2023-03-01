@@ -66,13 +66,6 @@ public class ParseMapFunction implements MapFunction<String, Tuple3<String, Stri
                             case "hierarchy":
                                 String key = JsonParseUtil.getString(dimensionsObj, resultKeyName) + "@" + ThreadLocalRandom.current().nextInt(StreamAggregateConfig.RANDOM_RANGE_NUM);
                                 return new Tuple3<>(key, JsonMapper.toJsonString(dimensionsObj), ParseFunctions.getMetricsLog(originalLog));
-//                            case "dismantling":
-//                                if (StringUtil.isNotBlank(parameters)) {
-//                                    if (logsValue != null) {
-//                                        JsonParseUtil.setValue(message, logsKeyName, ParseFunctions.dismantlingUtils(parameters, logsValue));
-//                                    }
-//                                }
-//                                break;
                             default:
                                 break;
                         }

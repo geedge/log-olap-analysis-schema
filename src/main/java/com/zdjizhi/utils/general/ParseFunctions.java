@@ -118,13 +118,12 @@ public class ParseFunctions {
     /**
      * 根据表达式解析json
      * <p>
-     * //     * @param message json
+     * //* @param message json
      *
      * @param expr 解析表达式
      * @return 解析结果
      */
     public static void flattenSpec(Map<String, Object> dimensions, String expr, String resultKeyName, String logsKeyValue) {
-
         try {
             if (StringUtil.isNotBlank(expr)) {
                 ArrayList<Object> read = JsonPath.parse(logsKeyValue).read(expr);

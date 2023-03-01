@@ -59,7 +59,6 @@ public class FirstCountWindowFunction extends ProcessWindowFunction<Tuple3<Strin
             if (!cacheMap.isEmpty()) {
                 for (String dimensions : cacheMap.keySet()) {
                     Map<String, Object> resultMap = cacheMap.get(dimensions);
-                    System.out.println("resultMap"+resultMap.toString());
                     output.collect(new Tuple2<>(dimensions, JsonMapper.toJsonString(resultMap)));
                 }
             }
